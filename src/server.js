@@ -8,8 +8,20 @@ dotenv.config();
 
 const app =express();
 app.use(express.json());
+const allowedOrigins = [
+    process.env.FRONTEND_URL,
+    "https://portfolio-react-phi-ten.vercel.app", // Fallback for production if ENV is missing
+    "http://localhost:5173"
+];
+
 app.use(cors({
-    origin: process.env.FRONTEND_URL,
+    origin: function (origin, callback) {
+        if (!origin || allowedOrigins.indexOf(origin) !== -1) {
+            callback(null, true);
+        } else {
+            callback(new Error("Not allowed by CORS"));
+        }
+    },
     methods: "GET,POST",
     credentials: true
 }));

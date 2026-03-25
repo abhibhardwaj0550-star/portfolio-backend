@@ -28,7 +28,7 @@ export const sendContactMessage = async (req, res) => {
     const transporter = nodemailer.createTransport({
       host: process.env.SMTP_HOST,
       port: process.env.SMTP_PORT,
-      secure: false,
+      secure: false, // true for 465, false for other ports
       auth: {
         user: process.env.SMTP_USER,
         pass: process.env.SMTP_PASS,
@@ -36,81 +36,58 @@ export const sendContactMessage = async (req, res) => {
     });
 
     // ===============================
-    // 📩 1. Email to YOU
+    // 📩 Send Emails in Parallel
     // ===============================
-    await transporter.sendMail({
+    const mailToSelf = transporter.sendMail({
       from: `"Portfolio Contact" <${process.env.SMTP_USER}>`,
       to: process.env.RECEIVER_EMAIL,
       replyTo: email,
       subject: `📩 New message from ${name}`,
       html: `
         <div style="font-family: Arial, sans-serif; padding: 20px;">
-          <div style="max-width:600px;margin:auto;background:#fff;padding:20px;border-radius:10px;">
-            
-            <h2 style="text-align:center;">📩 New Contact Message</h2>
+          <div style="max-width:600px;margin:auto;background:#fff;padding:20px;border-radius:10px; border:1px solid #eee;">
+            <h2 style="text-align:center; color:#333;">📩 New Contact Message</h2>
             <hr/>
-
             <p><strong>Name:</strong> ${name}</p>
             <p><strong>Email:</strong> ${email}</p>
-
             <p><strong>Message:</strong></p>
-            <div style="background:#f4f4f4;padding:10px;border-radius:5px;">
+            <div style="background:#f9f9f9;padding:15px;border-radius:5px; border-left:4px solid #B415ff;">
               ${message}
             </div>
-
           </div>
         </div>
       `,
     });
 
-    // ===============================
-    // 📩 2. Auto-reply to USER
-    // ===============================
-    await transporter.sendMail({
+    const mailToUser = transporter.sendMail({
       from: `"Abhinesh Bhardwaj" <${process.env.SMTP_USER}>`,
       to: email,
       subject: "Thank you for contacting me 🙌",
       html: `
         <div style="font-family: Arial, sans-serif; padding: 20px;">
-          <div style="max-width:600px;margin:auto;background:#fff;padding:20px;border-radius:10px;">
-            
-            <h2>Hello ${name} 👋</h2>
-
+          <div style="max-width:600px;margin:auto;background:#fff;padding:20px;border-radius:10px; border:1px solid #eee;">
+            <h2 style="color:#B415ff;">Hello ${name} 👋</h2>
             <p>Thank you for visiting my portfolio and reaching out.</p>
-
-            <p>
-              I appreciate your interest and will review your message shortly.
-              I am a passionate MERN Stack Developer focused on building 
-              responsive and user-friendly web applications.
-            </p>
-
-            <p>
-              I am currently open to job opportunities and freelance projects. 
-              If you're looking for a developer, I would love to connect with you.
-            </p>
-
+            <p>I appreciate your interest and will review your message shortly. I am a passionate MERN Stack Developer focused on building responsive and user-friendly web applications.</p>
+            <p>I am currently open to job opportunities and freelance projects.</p>
             <br/>
-
             <p><strong>Your Message:</strong></p>
-            <div style="background:#f4f4f4;padding:10px;border-radius:5px;">
+            <div style="background:#f9f9f9;padding:15px;border-radius:5px; border-left:4px solid #DF8908;">
               ${message}
             </div>
-
             <br/>
-
             <p>Best Regards,</p>
             <p><strong>Abhinesh Bhardwaj</strong></p>
             <p>MERN Stack Developer</p>
-
             <hr/>
-            <p style="font-size:12px;color:gray;">
-              This is an automated response. I will get back to you soon.
-            </p>
-
+            <p style="font-size:12px;color:gray;">This is an automated response. I will get back to you soon.</p>
           </div>
         </div>
       `,
     });
+
+    // Wait for both emails to finish
+    await Promise.all([mailToSelf, mailToUser]);
 
     // ✅ Final Response
     return res.status(200).json({
