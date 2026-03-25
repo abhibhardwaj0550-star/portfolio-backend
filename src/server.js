@@ -5,6 +5,8 @@ import cors from "cors";
 
 import ContactRoutes from "../src/router/ContactRoute.js"
 dotenv.config();
+console.log("Backend Initializing...");
+console.log("CORS Allowed Origins:", process.env.FRONTEND_URL);
 
 const app =express();
 app.use(express.json());
@@ -19,6 +21,7 @@ app.use(cors({
         if (!origin || allowedOrigins.indexOf(origin) !== -1) {
             callback(null, true);
         } else {
+            console.error("CORS Blocked Origin:", origin);
             callback(new Error("Not allowed by CORS"));
         }
     },
@@ -27,8 +30,8 @@ app.use(cors({
 }));
 mongoose
 .connect(process.env.MONGO_URI)
-.then(()=> console.log(" Mongo Db connected"))
-.catch((err)=> console.log("Mongo db eroor:", err.message));
+.then(()=> console.log("✅ MongoDB Connected Successfully"))
+.catch((err)=> console.error("❌ MongoDB Connection Error:", err.message));
 
 
 app.use("/mail", ContactRoutes);
